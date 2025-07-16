@@ -105,22 +105,18 @@ export class DatabaseStorage implements IStorage {
 
   // Meal plan operations
   async getMealPlansByUser(userId: string, startDate?: string, endDate?: string): Promise<(MealPlan & { meals: Meal[] })[]> {
-    let query = db
-      .select()
-      .from(mealPlans)
-      .where(eq(mealPlans.userId, userId));
+    const whereConditions = [eq(mealPlans.userId, userId)];
 
     if (startDate && endDate) {
-      query = query.where(
-        and(
-          eq(mealPlans.userId, userId),
-          gte(mealPlans.date, startDate),
-          lte(mealPlans.date, endDate)
-        )
-      );
+      whereConditions.push(gte(mealPlans.date, startDate));
+      whereConditions.push(lte(mealPlans.date, endDate));
     }
 
-    const plans = await query.orderBy(desc(mealPlans.date));
+    const plans = await db
+      .select()
+      .from(mealPlans)
+      .where(and(...whereConditions))
+      .orderBy(desc(mealPlans.date));
     
     // Get meals for each plan
     const plansWithMeals = await Promise.all(
@@ -168,21 +164,17 @@ export class DatabaseStorage implements IStorage {
 
   // Task operations
   async getTasksByUser(userId: string, date?: string): Promise<Task[]> {
-    let query = db
-      .select()
-      .from(tasks)
-      .where(eq(tasks.userId, userId));
+    const whereConditions = [eq(tasks.userId, userId)];
 
     if (date) {
-      query = query.where(
-        and(
-          eq(tasks.userId, userId),
-          eq(tasks.dueDate, date)
-        )
-      );
+      whereConditions.push(eq(tasks.dueDate, date));
     }
 
-    return await query.orderBy(tasks.createdAt);
+    return await db
+      .select()
+      .from(tasks)
+      .where(and(...whereConditions))
+      .orderBy(tasks.createdAt);
   }
 
   async createTask(task: InsertTask): Promise<Task> {
@@ -207,13 +199,16 @@ export class DatabaseStorage implements IStorage {
 
   // Health news operations
   async getHealthNews(category?: string, limit = 10): Promise<HealthNews[]> {
-    let query = db.select().from(healthNews);
+    let baseQuery = db.select().from(healthNews);
 
     if (category && category !== 'all') {
-      query = query.where(eq(healthNews.category, category));
+      return await baseQuery
+        .where(eq(healthNews.category, category))
+        .orderBy(desc(healthNews.publishedAt))
+        .limit(limit);
     }
 
-    return await query
+    return await baseQuery
       .orderBy(desc(healthNews.publishedAt))
       .limit(limit);
   }
@@ -228,22 +223,18 @@ export class DatabaseStorage implements IStorage {
 
   // Progress tracking
   async getUserProgress(userId: string, startDate?: string, endDate?: string): Promise<UserProgress[]> {
-    let query = db
-      .select()
-      .from(userProgress)
-      .where(eq(userProgress.userId, userId));
+    const whereConditions = [eq(userProgress.userId, userId)];
 
     if (startDate && endDate) {
-      query = query.where(
-        and(
-          eq(userProgress.userId, userId),
-          gte(userProgress.date, startDate),
-          lte(userProgress.date, endDate)
-        )
-      );
+      whereConditions.push(gte(userProgress.date, startDate));
+      whereConditions.push(lte(userProgress.date, endDate));
     }
 
-    return await query.orderBy(desc(userProgress.date));
+    return await db
+      .select()
+      .from(userProgress)
+      .where(and(...whereConditions))
+      .orderBy(desc(userProgress.date));
   }
 
   async createUserProgress(progress: InsertUserProgress): Promise<UserProgress> {
