@@ -29,9 +29,7 @@ export default function Home() {
     retry: false,
   });
 
-  const handleLogout = () => {
-    window.location.href = '/api/logout';
-  };
+  // Remove handleLogout and /api/logout
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -51,55 +49,8 @@ export default function Home() {
             <HealthNews showFilters={true} />
           </div>
         );
-      case 'profile':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile Settings</h1>
-              <p className="text-gray-600">Manage your account and preferences</p>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="w-20 h-20">
-                      <AvatarImage src={user?.profileImageUrl} />
-                      <AvatarFallback className="bg-primary-100 text-primary-700 text-lg">
-                        {user?.firstName?.[0]}{user?.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="text-xl font-semibold">{user?.firstName} {user?.lastName}</h3>
-                      <p className="text-gray-600">{user?.email}</p>
-                    </div>
-                  </div>
-                  {profile && (
-                    <div className="grid md:grid-cols-2 gap-4 mt-6">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Age</label>
-                        <p className="text-lg">{profile.age} years</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Height</label>
-                        <p className="text-lg">{profile.height} cm</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Current Weight</label>
-                        <p className="text-lg">{profile.weight} kg</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Goal</label>
-                        <p className="text-lg capitalize">{profile.goal?.replace('-', ' ')}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
       default:
-        return <DashboardOverview />;
+        return null;
     }
   };
 
@@ -175,7 +126,7 @@ export default function Home() {
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out
                 </DropdownMenuItem>

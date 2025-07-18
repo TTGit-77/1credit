@@ -1,14 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
 export function useAuth() {
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-  });
-
+  // For now, always return a mock user or unauthenticated
   return {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
+    user: { id: 'demo-user', name: 'Demo User' },
+    isLoading: false,
+    isAuthenticated: true,
   };
 }

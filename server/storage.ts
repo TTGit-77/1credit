@@ -1,248 +1,129 @@
-import {
-  users,
-  userProfiles,
-  mealPlans,
-  meals,
-  tasks,
-  healthNews,
-  userProgress,
-  type User,
-  type UpsertUser,
-  type UserProfile,
-  type InsertUserProfile,
-  type MealPlan,
-  type InsertMealPlan,
-  type Meal,
-  type InsertMeal,
-  type Task,
-  type InsertTask,
-  type HealthNews,
-  type InsertHealthNews,
-  type UserProgress,
-  type InsertUserProgress,
-} from "@shared/schema";
-import { db } from "./db";
-import { eq, desc, and, gte, lte } from "drizzle-orm";
+import User from './models/user.ts';
+import UserProfile from './models/userProfile.ts';
+import MealPlan from './models/mealPlan.ts';
+import Meal from './models/meal.ts';
+import Task from './models/task.ts';
+import HealthNews from './models/healthNews.ts';
+import UserProgress from './models/userProgress.ts';
 
 // Interface for storage operations
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
-  getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
-  
-  // User profile operations
-  getUserProfile(userId: string): Promise<UserProfile | undefined>;
-  createUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
-  updateUserProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile>;
-  
-  // Meal plan operations
-  getMealPlansByUser(userId: string, startDate?: string, endDate?: string): Promise<(MealPlan & { meals: Meal[] })[]>;
-  createMealPlan(mealPlan: InsertMealPlan): Promise<MealPlan>;
-  addMealToPlan(meal: InsertMeal): Promise<Meal>;
-  updateMealCompletion(mealId: number, completed: boolean): Promise<Meal>;
-  
-  // Task operations
-  getTasksByUser(userId: string, date?: string): Promise<Task[]>;
-  createTask(task: InsertTask): Promise<Task>;
-  updateTaskCompletion(taskId: number, completed: boolean): Promise<Task>;
-  
-  // Health news operations
-  getHealthNews(category?: string, limit?: number): Promise<HealthNews[]>;
-  createHealthNews(news: InsertHealthNews): Promise<HealthNews>;
-  
-  // Progress tracking
-  getUserProgress(userId: string, startDate?: string, endDate?: string): Promise<UserProgress[]>;
-  createUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
+  getUser(id: string): Promise<any>;
+  upsertUser(user: any): Promise<any>;
+  getUserProfile(userId: string): Promise<any>;
+  createUserProfile(profile: any): Promise<any>;
+  updateUserProfile(userId: string, profile: any): Promise<any>;
+  getMealPlansByUser(userId: string, startDate?: string, endDate?: string): Promise<any[]>;
+  createMealPlan(mealPlan: any): Promise<any>;
+  addMealToPlan(meal: any): Promise<any>;
+  updateMealCompletion(mealId: string, completed: boolean): Promise<any>;
+  getTasksByUser(userId: string, date?: string): Promise<any[]>;
+  createTask(task: any): Promise<any>;
+  updateTaskCompletion(taskId: string, completed: boolean): Promise<any>;
+  getHealthNews(category?: string, limit?: number): Promise<any[]>;
+  createHealthNews(news: any): Promise<any>;
+  getUserProgress(userId: string, startDate?: string, endDate?: string): Promise<any[]>;
+  createUserProgress(progress: any): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations (mandatory for Replit Auth)
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+  async getUser(id: string) {
+    return await User.findOne({ id });
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+  async upsertUser(userData: any) {
+    return await User.findOneAndUpdate(
+      { id: userData.id },
+      { ...userData, updatedAt: new Date() },
+      { upsert: true, new: true }
+    );
   }
 
-  // User profile operations
-  async getUserProfile(userId: string): Promise<UserProfile | undefined> {
-    const [profile] = await db
-      .select()
-      .from(userProfiles)
-      .where(eq(userProfiles.userId, userId));
-    return profile;
+  async getUserProfile(userId: string) {
+    return await UserProfile.findOne({ userId });
   }
 
-  async createUserProfile(profile: InsertUserProfile): Promise<UserProfile> {
-    const [newProfile] = await db
-      .insert(userProfiles)
-      .values(profile)
-      .returning();
-    return newProfile;
+  async createUserProfile(profile: any) {
+    return await UserProfile.create(profile);
   }
 
-  async updateUserProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile> {
-    const [updatedProfile] = await db
-      .update(userProfiles)
-      .set({ ...profile, updatedAt: new Date() })
-      .where(eq(userProfiles.userId, userId))
-      .returning();
-    return updatedProfile;
+  async updateUserProfile(userId: string, profile: any) {
+    return await UserProfile.findOneAndUpdate(
+      { userId },
+      { ...profile, updatedAt: new Date() },
+      { new: true }
+    );
   }
 
-  // Meal plan operations
-  async getMealPlansByUser(userId: string, startDate?: string, endDate?: string): Promise<(MealPlan & { meals: Meal[] })[]> {
-    const whereConditions = [eq(mealPlans.userId, userId)];
-
+  async getMealPlansByUser(userId: string, startDate?: string, endDate?: string) {
+    const query: any = { userId };
     if (startDate && endDate) {
-      whereConditions.push(gte(mealPlans.date, startDate));
-      whereConditions.push(lte(mealPlans.date, endDate));
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
-
-    const plans = await db
-      .select()
-      .from(mealPlans)
-      .where(and(...whereConditions))
-      .orderBy(desc(mealPlans.date));
-    
-    // Get meals for each plan
+    const plans = await MealPlan.find(query).sort({ date: -1 });
     const plansWithMeals = await Promise.all(
-      plans.map(async (plan) => {
-        const planMeals = await db
-          .select()
-          .from(meals)
-          .where(eq(meals.mealPlanId, plan.id))
-          .orderBy(meals.mealType);
-        
-        return { ...plan, meals: planMeals };
+      plans.map(async (plan: any) => {
+        const meals = await Meal.find({ mealPlanId: plan._id }).sort({ mealType: 1 });
+        return { ...plan.toObject(), meals };
       })
     );
-
     return plansWithMeals;
   }
 
-  async createMealPlan(mealPlan: InsertMealPlan): Promise<MealPlan> {
-    const [newPlan] = await db
-      .insert(mealPlans)
-      .values(mealPlan)
-      .returning();
-    return newPlan;
+  async createMealPlan(mealPlan: any) {
+    return await MealPlan.create(mealPlan);
   }
 
-  async addMealToPlan(meal: InsertMeal): Promise<Meal> {
-    const [newMeal] = await db
-      .insert(meals)
-      .values(meal)
-      .returning();
-    return newMeal;
+  async addMealToPlan(meal: any) {
+    return await Meal.create(meal);
   }
 
-  async updateMealCompletion(mealId: number, completed: boolean): Promise<Meal> {
-    const [updatedMeal] = await db
-      .update(meals)
-      .set({ 
-        completed, 
-        completedAt: completed ? new Date() : null 
-      })
-      .where(eq(meals.id, mealId))
-      .returning();
-    return updatedMeal;
+  async updateMealCompletion(mealId: string, completed: boolean) {
+    return await Meal.findByIdAndUpdate(
+      mealId,
+      { completed, completedAt: completed ? new Date() : null },
+      { new: true }
+    );
   }
 
-  // Task operations
-  async getTasksByUser(userId: string, date?: string): Promise<Task[]> {
-    const whereConditions = [eq(tasks.userId, userId)];
-
-    if (date) {
-      whereConditions.push(eq(tasks.dueDate, date));
-    }
-
-    return await db
-      .select()
-      .from(tasks)
-      .where(and(...whereConditions))
-      .orderBy(tasks.createdAt);
+  async getTasksByUser(userId: string, date?: string) {
+    const query: any = { userId };
+    if (date) query.dueDate = new Date(date);
+    return await Task.find(query).sort({ createdAt: 1 });
   }
 
-  async createTask(task: InsertTask): Promise<Task> {
-    const [newTask] = await db
-      .insert(tasks)
-      .values(task)
-      .returning();
-    return newTask;
+  async createTask(task: any) {
+    return await Task.create(task);
   }
 
-  async updateTaskCompletion(taskId: number, completed: boolean): Promise<Task> {
-    const [updatedTask] = await db
-      .update(tasks)
-      .set({ 
-        completed, 
-        completedAt: completed ? new Date() : null 
-      })
-      .where(eq(tasks.id, taskId))
-      .returning();
-    return updatedTask;
+  async updateTaskCompletion(taskId: string, completed: boolean) {
+    return await Task.findByIdAndUpdate(
+      taskId,
+      { completed, completedAt: completed ? new Date() : null },
+      { new: true }
+    );
   }
 
-  // Health news operations
-  async getHealthNews(category?: string, limit = 10): Promise<HealthNews[]> {
-    let baseQuery = db.select().from(healthNews);
-
-    if (category && category !== 'all') {
-      return await baseQuery
-        .where(eq(healthNews.category, category))
-        .orderBy(desc(healthNews.publishedAt))
-        .limit(limit);
-    }
-
-    return await baseQuery
-      .orderBy(desc(healthNews.publishedAt))
-      .limit(limit);
+  async getHealthNews(category?: string, limit = 10) {
+    const query: any = {};
+    if (category && category !== 'all') query.category = category;
+    return await HealthNews.find(query).sort({ publishedAt: -1 }).limit(limit);
   }
 
-  async createHealthNews(news: InsertHealthNews): Promise<HealthNews> {
-    const [newNews] = await db
-      .insert(healthNews)
-      .values(news)
-      .returning();
-    return newNews;
+  async createHealthNews(news: any) {
+    return await HealthNews.create(news);
   }
 
-  // Progress tracking
-  async getUserProgress(userId: string, startDate?: string, endDate?: string): Promise<UserProgress[]> {
-    const whereConditions = [eq(userProgress.userId, userId)];
-
+  async getUserProgress(userId: string, startDate?: string, endDate?: string) {
+    const query: any = { userId };
     if (startDate && endDate) {
-      whereConditions.push(gte(userProgress.date, startDate));
-      whereConditions.push(lte(userProgress.date, endDate));
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
-
-    return await db
-      .select()
-      .from(userProgress)
-      .where(and(...whereConditions))
-      .orderBy(desc(userProgress.date));
+    return await UserProgress.find(query).sort({ date: -1 });
   }
 
-  async createUserProgress(progress: InsertUserProgress): Promise<UserProgress> {
-    const [newProgress] = await db
-      .insert(userProgress)
-      .values(progress)
-      .returning();
-    return newProgress;
+  async createUserProgress(progress: any) {
+    return await UserProgress.create(progress);
   }
 }
 

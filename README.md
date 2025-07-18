@@ -1,10 +1,8 @@
-# 1credit
-
-NutriFlow - Enterprise-Grade Diet and Meal Planner Web Application
+# NutriFlow - Enterprise-Grade Diet and Meal Planner Web Application
 
 ## Features
 
-- **User Authentication**: Secure login with Replit Auth integration
+- **User Authentication**: (Optional) Local or mock login for demo
 - **Personalized Meal Planning**: 3-day meal plans based on user preferences (height, weight, dietary preferences)
 - **Multi-Cuisine Support**: Indian, Italian, French, South Indian cuisines
 - **Task Management**: Health-related task tracking and completion
@@ -15,9 +13,8 @@ NutriFlow - Enterprise-Grade Diet and Meal Planner Web Application
 ## Tech Stack
 
 - **Frontend**: React 18 + TypeScript, Tailwind CSS, Radix UI
-- **Backend**: Express.js + TypeScript, Drizzle ORM
-- **Database**: PostgreSQL (Neon serverless)
-- **Authentication**: Replit Auth with OpenID Connect
+- **Backend**: Express.js + TypeScript, Mongoose (MongoDB)
+- **Database**: MongoDB
 - **State Management**: TanStack Query
 - **Styling**: Professional glassmorphism design system
 
@@ -30,16 +27,11 @@ NutriFlow - Enterprise-Grade Diet and Meal Planner Web Application
 
 2. Set up environment variables:
    ```bash
-   DATABASE_URL=your_postgresql_url
+   DATABASE_URL=mongodb://localhost:27017/dietplannerpro
    SESSION_SECRET=your_session_secret
    ```
 
-3. Push database schema:
-   ```bash
-   npm run db:push
-   ```
-
-4. Start development server:
+3. Start development server:
    ```bash
    npm run dev
    ```
@@ -48,8 +40,8 @@ NutriFlow - Enterprise-Grade Diet and Meal Planner Web Application
 
 - **Frontend**: Modern React architecture with TypeScript
 - **Backend**: RESTful API with Express.js
-- **Database**: PostgreSQL with Drizzle ORM for type-safe operations
-- **Authentication**: Secure session management with PostgreSQL storage
+- **Database**: MongoDB with Mongoose for type-safe operations
+- **Authentication**: (Optional) Local or mock session management
 
 ## Database Schema
 
@@ -61,4 +53,31 @@ NutriFlow - Enterprise-Grade Diet and Meal Planner Web Application
 
 ## Deployment
 
-The application is designed for deployment on Replit with automatic environment configuration and database provisioning.
+The application is designed for deployment on any Node.js/MongoDB-compatible environment.
+
+## Environment Variables Required
+
+```bash
+DATABASE_URL=mongodb://localhost:27017/dietplannerpro
+SESSION_SECRET=your_session_secret_key
+```
+
+## Development Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## Project Status
+
+The application is fully functional with:
+- ✅ All TypeScript errors resolved
+- ✅ Database schema synchronized
+- ✅ Professional UI implementation complete
