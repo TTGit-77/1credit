@@ -26,15 +26,23 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import TaskCard from "./task-card";
-import type { Task, InsertTask } from "@shared/schema";
+
+// Local type for Task
+interface Task {
+  id: string;
+  dueDate: string;
+  completed?: boolean;
+  type?: string;
+  [key: string]: any;
+}
 
 export default function DashboardTasks() {
   const [showCreateTask, setShowCreateTask] = useState(false);
-  const [newTask, setNewTask] = useState<Partial<InsertTask>>({
+  const [newTask, setNewTask] = useState<Partial<Task>>({
     title: '',
     description: '',
-    type: 'custom',
-    dueDate: new Date().toISOString().split('T')[0]
+    type: '',
+    dueDate: '',
   });
 
   const { toast } = useToast();
@@ -42,18 +50,18 @@ export default function DashboardTasks() {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const { data: todayTasks, isLoading: todayLoading } = useQuery({
+  const { data: todayTasks = [], isLoading: todayLoading } = useQuery<Task[]>({
     queryKey: ['/api/tasks', { date: today }],
     retry: false,
   });
 
-  const { data: allTasks } = useQuery({
+  const { data: allTasks = [] } = useQuery<Task[]>({
     queryKey: ['/api/tasks'],
     retry: false,
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: async (taskData: InsertTask) => {
+    mutationFn: async (taskData: any) => {
       return await apiRequest('POST', '/api/tasks', taskData);
     },
     onSuccess: () => {
@@ -94,7 +102,7 @@ export default function DashboardTasks() {
       description: newTask.description || '',
       type: newTask.type || 'custom',
       dueDate: newTask.dueDate || today
-    } as InsertTask);
+    });
   };
 
   // Calculate weekly progress
@@ -104,7 +112,7 @@ export default function DashboardTasks() {
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     
-    const weeklyTasks = allTasks.filter(task => {
+    const weeklyTasks = allTasks.filter((task: Task) => {
       if (!task.dueDate) return false;
       const taskDate = new Date(task.dueDate);
       return taskDate >= weekAgo && taskDate <= now;
@@ -115,28 +123,28 @@ export default function DashboardTasks() {
         title: "Drink 8 glasses water daily",
         type: "water",
         target: 7,
-        completed: weeklyTasks.filter(t => t.type === 'water' && t.completed).length,
+        completed: weeklyTasks.filter((t: Task) => t.type === 'water' && t.completed).length,
         color: "bg-cyan-500"
       },
       {
         title: "Exercise 4 times per week", 
         type: "exercise",
         target: 4,
-        completed: weeklyTasks.filter(t => t.type === 'exercise' && t.completed).length,
+        completed: weeklyTasks.filter((t: Task) => t.type === 'exercise' && t.completed).length,
         color: "bg-blue-500"
       },
       {
         title: "Follow meal plan",
         type: "meal", 
         target: 7,
-        completed: weeklyTasks.filter(t => t.type === 'meal' && t.completed).length,
+        completed: weeklyTasks.filter((t: Task) => t.type === 'meal' && t.completed).length,
         color: "bg-green-500"
       },
       {
         title: "Take daily supplements",
         type: "supplement",
         target: 7, 
-        completed: weeklyTasks.filter(t => t.type === 'supplement' && t.completed).length,
+        completed: weeklyTasks.filter((t: Task) => t.type === 'supplement' && t.completed).length,
         color: "bg-purple-500"
       }
     ];
@@ -188,8 +196,8 @@ export default function DashboardTasks() {
     }
   ];
 
-  const todayCompleted = todayTasks?.filter(task => task.completed).length || 0;
-  const todayTotal = todayTasks?.length || 0;
+  const todayCompleted = todayTasks.filter((task: Task) => task.completed).length;
+  const todayTotal = todayTasks.length;
   const weeklyGoals = getWeeklyProgress();
 
   return (
@@ -318,7 +326,7 @@ export default function DashboardTasks() {
                   </div>
                 ) : todayTasks && todayTasks.length > 0 ? (
                   <div className="space-y-4">
-                    {todayTasks.map((task, index) => (
+                    {todayTasks.map((task: Task, index) => (
                       <motion.div
                         key={task.id}
                         initial={{ opacity: 0, x: -20 }}

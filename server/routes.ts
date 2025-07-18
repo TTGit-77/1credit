@@ -1,8 +1,38 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserProfileSchema, insertTaskSchema, insertUserProgressSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Define local Zod schemas if needed, or skip validation for now
+const insertUserProfileSchema = z.object({
+  userId: z.string(),
+  age: z.number().optional(),
+  gender: z.string().optional(),
+  height: z.number().optional(),
+  weight: z.number().optional(),
+  activityLevel: z.string().optional(),
+  goal: z.string().optional(),
+  dietType: z.string().optional(),
+  cuisinePreferences: z.array(z.string()).optional(),
+  allergies: z.array(z.string()).optional(),
+  additionalInfo: z.string().optional(),
+});
+const insertTaskSchema = z.object({
+  userId: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  type: z.string(),
+  dueDate: z.string().optional(),
+});
+const insertUserProgressSchema = z.object({
+  userId: z.string(),
+  date: z.string(),
+  weight: z.number().optional(),
+  caloriesConsumed: z.number().optional(),
+  waterIntake: z.number().optional(),
+  exerciseMinutes: z.number().optional(),
+  notes: z.string().optional(),
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // No auth middleware

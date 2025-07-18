@@ -20,10 +20,23 @@ import {
 import MealPlanCard from "./meal-plan-card";
 import { useAuth } from "@/hooks/useAuth";
 
+// Local types for this component
+interface Task {
+  id: string;
+  dueDate: string;
+  completed?: boolean;
+  type?: string;
+  [key: string]: any;
+}
+interface UserProfile {
+  weight?: number;
+  [key: string]: any;
+}
+
 export default function DashboardOverview() {
   const { user } = useAuth();
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: ['/api/profile'],
     retry: false,
   });
@@ -33,7 +46,7 @@ export default function DashboardOverview() {
     retry: false,
   });
 
-  const { data: todayTasks } = useQuery({
+  const { data: todayTasks, isLoading: tasksLoading } = useQuery<Task[]>({
     queryKey: ['/api/tasks', { date: new Date().toISOString().split('T')[0] }],
     retry: false,
   });

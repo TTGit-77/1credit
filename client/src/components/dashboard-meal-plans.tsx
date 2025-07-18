@@ -23,7 +23,27 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import TaskCard from "./task-card";
-import type { MealPlan, Meal, Task } from "@shared/schema";
+
+// Local types for this component
+interface Meal {
+  id: string;
+  mealType: string;
+  name: string;
+  completed?: boolean;
+  [key: string]: any;
+}
+interface MealPlan {
+  id: string;
+  date: string;
+  meals: Meal[];
+  [key: string]: any;
+}
+interface Task {
+  id: string;
+  dueDate: string;
+  completed?: boolean;
+  [key: string]: any;
+}
 
 export default function DashboardMealPlans() {
   const [selectedDay, setSelectedDay] = useState(0);
@@ -35,12 +55,12 @@ export default function DashboardMealPlans() {
   const startDate = today.toISOString().split('T')[0];
   const endDate = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-  const { data: mealPlans, isLoading, error } = useQuery({
+  const { data: mealPlans, isLoading, error } = useQuery<MealPlan[]>({
     queryKey: ['/api/meal-plans', { startDate, endDate }],
     retry: false,
   });
 
-  const { data: allTasks } = useQuery({
+  const { data: allTasks, isLoading: tasksLoading } = useQuery<Task[]>({
     queryKey: ['/api/tasks'],
     retry: false,
   });
@@ -66,7 +86,7 @@ export default function DashboardMealPlans() {
   });
 
   const updateMealMutation = useMutation({
-    mutationFn: async ({ mealId, completed }: { mealId: number; completed: boolean }) => {
+    mutationFn: async ({ mealId, completed }: { mealId: string; completed: boolean }) => {
       return await apiRequest('PATCH', `/api/meals/${mealId}/complete`, { completed });
     },
     onSuccess: () => {

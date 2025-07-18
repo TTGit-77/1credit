@@ -4,6 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BarChart3, Calendar, CheckSquare, Home, Newspaper, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
+// Local type for User
+interface User {
+  id: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profileImageUrl: string;
+}
+
 interface DashboardSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;

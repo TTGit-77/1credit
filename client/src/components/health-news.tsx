@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink, Clock } from "lucide-react";
 
+// Local type for NewsArticle
+interface NewsArticle {
+  id: string;
+  title: string;
+  category: string;
+  [key: string]: any;
+}
+
 interface HealthNewsProps {
   showFilters?: boolean;
   limit?: number;
@@ -15,8 +23,9 @@ interface HealthNewsProps {
 export default function HealthNews({ showFilters = false, limit = 6 }: HealthNewsProps) {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const { data: news, isLoading } = useQuery({
+  const { data: displayNews = [], isLoading } = useQuery<NewsArticle[]>({
     queryKey: ['/api/health-news', { category: selectedCategory !== 'all' ? selectedCategory : undefined, limit }],
+    retry: false,
   });
 
   const categories = [
@@ -54,7 +63,7 @@ export default function HealthNews({ showFilters = false, limit = 6 }: HealthNew
   // Sample news data for demonstration when no backend data is available
   const sampleNews = [
     {
-      id: 1,
+      id: "1",
       title: "10 Superfoods That Boost Your Immune System",
       description: "Discover the power of nutrient-dense foods that can naturally strengthen your body's defenses and improve overall health.",
       category: "nutrition",
@@ -63,7 +72,7 @@ export default function HealthNews({ showFilters = false, limit = 6 }: HealthNew
       sourceUrl: "#"
     },
     {
-      id: 2,
+      id: "2",
       title: "Morning Exercise: The Key to Better Metabolism",
       description: "New research shows how morning workouts can significantly impact your metabolic rate throughout the day.",
       category: "fitness",
@@ -72,7 +81,7 @@ export default function HealthNews({ showFilters = false, limit = 6 }: HealthNew
       sourceUrl: "#"
     },
     {
-      id: 3,
+      id: "3",
       title: "Mindful Eating: Transform Your Relationship with Food",
       description: "Learn how mindfulness practices can help you make better food choices and improve digestion.",
       category: "wellness",
@@ -81,7 +90,7 @@ export default function HealthNews({ showFilters = false, limit = 6 }: HealthNew
       sourceUrl: "#"
     },
     {
-      id: 4,
+      id: "4",
       title: "Breakthrough Study on Plant-Based Proteins",
       description: "Scientists discover new benefits of plant proteins for muscle building and recovery.",
       category: "research",
@@ -90,7 +99,7 @@ export default function HealthNews({ showFilters = false, limit = 6 }: HealthNew
       sourceUrl: "#"
     },
     {
-      id: 5,
+      id: "5",
       title: "Seasonal Eating: Why It Matters for Your Health",
       description: "Exploring the benefits of eating fruits and vegetables that are in season for optimal nutrition.",
       category: "nutrition",
@@ -99,7 +108,7 @@ export default function HealthNews({ showFilters = false, limit = 6 }: HealthNew
       sourceUrl: "#"
     },
     {
-      id: 6,
+      id: "6",
       title: "Hydration Myths: What Science Really Says",
       description: "Debunking common hydration myths and understanding your body's actual water needs.",
       category: "wellness",
@@ -109,10 +118,9 @@ export default function HealthNews({ showFilters = false, limit = 6 }: HealthNew
     }
   ];
 
-  const displayNews = news || sampleNews;
-  const filteredNews = selectedCategory === 'all' 
-    ? displayNews 
-    : displayNews.filter(article => article.category === selectedCategory);
+  const filteredNews = showFilters && selectedCategory !== 'all'
+    ? displayNews.filter((article: NewsArticle) => article.category === selectedCategory)
+    : displayNews;
 
   if (isLoading) {
     return (
@@ -170,7 +178,7 @@ export default function HealthNews({ showFilters = false, limit = 6 }: HealthNew
 
       {/* News grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredNews.map((article, index) => (
+        {filteredNews.map((article: NewsArticle, index: number) => (
           <motion.div
             key={article.id}
             initial={{ opacity: 0, y: 50 }}

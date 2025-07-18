@@ -7,7 +7,15 @@ import { Clock, CheckCircle, AlertCircle, Target, Droplets, Utensils, Pill, Acti
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Task } from "@shared/schema";
+
+// Local type for Task
+interface Task {
+  id: string;
+  dueDate: string;
+  completed?: boolean;
+  type?: string;
+  [key: string]: any;
+}
 
 interface TaskCardProps {
   task: Task;
@@ -104,7 +112,7 @@ export default function TaskCard({ task, variant = 'default' }: TaskCardProps) {
   };
 
   const timeStatus = getTimeStatus();
-  const TaskIcon = getTaskIcon(task.type);
+  const TaskIcon = getTaskIcon(task.type || 'custom');
   const isHighPriority = timeStatus?.color === 'text-red-600' || timeStatus?.color === 'text-primary-600';
 
   if (variant === 'compact') {
@@ -166,8 +174,8 @@ export default function TaskCard({ task, variant = 'default' }: TaskCardProps) {
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-1">
                     <TaskIcon className="w-4 h-4 text-primary" />
-                    <Badge variant="secondary" className={getTaskTypeColor(task.type)}>
-                      {task.type.charAt(0).toUpperCase() + task.type.slice(1)}
+                    <Badge variant="secondary" className={getTaskTypeColor(task.type || 'custom')}>
+                      {(task.type || 'custom').charAt(0).toUpperCase() + (task.type || 'custom').slice(1)}
                     </Badge>
                   </div>
                   
